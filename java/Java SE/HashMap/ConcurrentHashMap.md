@@ -9,10 +9,13 @@ JDK1.7中ConcurrentHashMap是通过“锁分段”来实现线程安全的。啥
 核心存储结构是segment，它是继承ReentrantLock的源码如下：
 
 ```Java
-static class Segment<K,V> extends ReentrantLock implements Serializable 
-{
-    private static final long serialVersionUID = 2249069246763182397L; final float loadFactor; 
-    Segment(float lf) { this.loadFactor = lf; } 
+static class Segment<K, V> extends ReentrantLock implements Serializable {
+    private static final long serialVersionUID = 2249069246763182397L;
+    final float loadFactor;
+
+    Segment(float lf) {
+        this.loadFactor = lf;
+    }
 }
 ```
 
@@ -41,19 +44,19 @@ ConcurrentHashMap结构图：
 `segment`是她的一个内部类，主要组成如下：
 
 ```Java
-static final class Segment<K,V> extends ReentrantLock implements Serializable {
+static final class Segment<K, V> extends ReentrantLock implements Serializable {
 
-  private static final long serialVersionUID = 2249069246763182397L;
-  
-  // 和 HashMap 中的 HashEntry 作用一样，真正存放数据的桶
-  transient volatile HashEntry<K,V>[] table;
-  
-  transient int count;
-  transient int modCount;
-  transient int threshold;
-  final float loadFactor;
+    private static final long serialVersionUID = 2249069246763182397L;
 
-  // ...
+    // 和 HashMap 中的 HashEntry 作用一样，真正存放数据的桶
+    transient volatile HashEntry<K, V>[] table;
+
+    transient int count;
+    transient int modCount;
+    transient int threshold;
+    final float loadFactor;
+
+    // ...
 }
 ```
 
@@ -157,7 +160,8 @@ Put 操作时，锁的是某个 Segment，其他线程对其他 Segment 的读�
 
 ### 2.5、为什么在高并发的情况下高效？
 
-ConcurrentHashMap中，无论是读操作还是写操作都能保证很高的性能：在进行读操作时(几乎)不需要加锁，而在写操作时通过锁分段技术只对所操作的段加锁而不影响客户端对其它段的访问。特别地，在理想状态下，ConcurrentHashMap 可以支持 16 个线程执行并发写操作（如果并发级别设为16），及任意数量线程的读操作。
+ConcurrentHashMap中，无论是读操作还是写操作都能保证很高的性能：在进行读操作时(几乎)
+不需要加锁，而在写操作时通过锁分段技术只对所操作的段加锁而不影响客户端对其它段的访问。特别地，在理想状态下，ConcurrentHashMap 可以支持 16 个线程执行并发写操作（如果并发级别设为16），及任意数量线程的读操作。
 
 ConcurrentHashMap本质上是一个Segment数组，而一个Segment实例又包含若干个桶，每个桶中都包含一条由若干个 HashEntry 对象链接起来的链表
 
@@ -167,4 +171,5 @@ ConcurrentHashMap的高效并发机制是通过以下三方面来保证的
 
 ## 3、总结
 
-1.8 在 1.7 的数据结构上做了大的改动，采用红黑树之后可以保证查询效率（O(logn)），甚至取消了 ReentrantLock 改为了 synchronized，这样可以看出在新版的 JDK 中对 synchronized 优化是很到位的。
+1.8 在 1.7 的数据结构上做了大的改动，采用红黑树之后可以保证查询效率（O(logn)），甚至取消了 ReentrantLock 改为了 synchronized，这样可以看出在新版的 JDK 中对 synchronized
+优化是很到位的。
