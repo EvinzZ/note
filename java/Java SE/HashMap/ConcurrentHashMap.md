@@ -130,7 +130,7 @@ Put 操作时，锁的是某个 Segment，其他线程对其他 Segment 的读�
 
 ![在这里插入图片描述](../../../images/20200807204852550.png)
 
-和 JDK7 的 HasEntry 作用相同，对 val 和 next 都用了 volatile 关键字，保证了可见性。
+和 JDK7 的 HasEntry 作用相同，对 `val `和` next` 都用了` volatile `关键字，保证了可见性。
 
 ### 2.3、Put操作的改变
 
