@@ -171,5 +171,5 @@ ConcurrentHashMap的高效并发机制是通过以下三方面来保证的
 
 ## 3、总结
 
-1.8 在 1.7 的数据结构上做了大的改动，采用红黑树之后可以保证查询效率（O(logn)），甚至取消了 ReentrantLock 改为了 synchronized，这样可以看出在新版的 JDK 中对 synchronized
-优化是很到位的。
+1.8 在 1.7 的数据结构上做了大的改动，采用红黑树之后可以保证查询效率（`O(logn)`），甚至取消了 `ReentrantLock` 改为了 `synchronized`，这样可以看出在新版的 JDK 中对` synchronized`优化是很到位的。
+
