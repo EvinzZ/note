@@ -1,4 +1,4 @@
-# JAVA动态加载外部JAR，并调用方法以及卸载关闭打开的外部JAR
+# javaJAVA动态加载外部JAR，并调用方法以及卸载关闭打开的外部JAR
 
 ```Java
 public class AddJar {
