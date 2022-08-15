@@ -1,12 +1,12 @@
 # docker安装kibana
 
-## 下载镜像
+### 1. 下载镜像
 
 ```Bash
 docker pull kibana:7.6.2
 ```
 
-## 配置文件
+### 2. 配置文件
 
 ```Bash
 mkdir -p /data/elk7/kibana/config/
@@ -26,7 +26,7 @@ elasticsearch.hosts: [ "http://192.168.31.190:9200" ]
 xpack.monitoring.ui.container.elasticsearch.enabled: true
 ```
 
-## 启动
+### 3. 启动
 
 ```Bash
 docker run -d \
@@ -37,12 +37,12 @@ docker run -d \
 kibana:7.6.2
 ```
 
-## 查看日志
+### 4. 查看日志
 
 ```Bash
 docker logs -f kibana
 ```
 
-## 访问页面
+### 5. 测试：访问页面
 
 http://host:5601
