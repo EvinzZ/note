@@ -10,6 +10,8 @@ Mac 微信功能拓展/微信插件/微信小助手(A plugin for Mac WeChat)：h
 
 短信轰炸机：github项目：SMSBoom
 
-mac终端：finalshell
+mac终端：finalshell：http://www.hostbuf.com/
 
 idea代码格式化插件（谷歌）：google-java-format
+
+壁纸：https://wallhaven.cc/
