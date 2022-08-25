@@ -15,3 +15,5 @@ mac终端：finalshell：http://www.hostbuf.com/
 idea代码格式化插件（谷歌）：google-java-format
 
 壁纸：https://wallhaven.cc/
+
+后台管理系统模板：若依：http://www.ruoyi.vip/
