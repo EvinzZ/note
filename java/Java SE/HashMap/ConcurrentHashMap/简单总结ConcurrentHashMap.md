@@ -35,4 +35,4 @@ hashtable（同一把锁）：使用synchronized来保证线程安全，效率�
 
 > ConcurrentHashMap不论时1.7还是1.8，他的效率都比hashtable高，主要还是因为hashtable使用了一种全表加锁的方式。
 
-![img](https://upload-images.jianshu.io/upload_images/20782304-8866c91f63937053.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/705/format/webp)
+![img](../../../../images/webp)

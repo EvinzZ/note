@@ -53,6 +53,7 @@ Lock前缀的指令在多核处理器下会引发了两件事情：
 ## 6.可见性案例
 
 ```Java
+// 一个线程修改了变量，两一个线程没有读到修改后的最新值
 public class Demob {
     static boolean stop = false;
 

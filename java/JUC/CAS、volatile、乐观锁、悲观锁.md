@@ -32,6 +32,114 @@ volatile变量是一个更轻量级的同步机制，因为在使用这些变量
 2. 由于线程一直运行，不需要阻塞，因此不涉及线程上下文切换
 3. 它需要多核cpu支持，且线程数不应超过cpu核数
 
+### 3.1. 乐观锁代码案例
+
+```java
+package com.mihu.demo.lock;
+
+import sun.misc.Unsafe;
+
+/**
+ * 乐观锁案例
+ */
+public class SyncVsCas {
+    static final Unsafe U = Unsafe.getUnsafe();
+    static final long BALANCE = U.objectFieldOffset(Account.class, "balance");
+
+    static class Account {
+        volatile int balance = 10;
+    }
+
+    public static void sync(Account account) {
+
+    }
+
+    public static void cas(Account account) {
+
+    }
+
+    public static void main(String[] args) {
+        Account account = new Account();
+        while (true) {
+            int o = account.balance;
+            int n = o + 5;
+            if (U.compareAndSwapInt(account, BALANCE, o, n)) {
+                break;
+            }
+        }
+    }
+
+}
+```
+
+### 3.2. 乐观锁VS悲观锁代码
+
+```java
+package com.mihu.demo.lock;
+
+import sun.misc.Unsafe;
+
+/**
+ * 乐观锁案例
+ */
+public class SyncVsCas {
+    static final Unsafe U = Unsafe.getUnsafe();
+    static final long BALANCE = U.objectFieldOffset(Account.class, "balance");
+
+    static class Account {
+        volatile int balance = 10;
+    }
+
+    public static void sync(Account account) {
+        new Thread(() -> {
+            synchronized (account) {
+                int old = account.balance;
+                int n = old - 5;
+                account.balance = n;
+            }
+        }, "t1").start();
+
+        new Thread(() -> {
+            synchronized (account) {
+                int o = account.balance;
+                int n = o + 5;
+                account.balance = n;
+            }
+        }, "t2").start();
+    }
+
+    public static void cas(Account account) {
+        new Thread(() -> {
+            while (true) {
+                int o = account.balance;
+                int n = o - 5;
+                if (U.compareAndSwapInt(account, BALANCE, o , n)) {
+                    break;
+                }
+            }
+        }, "t1").start();
+
+        new Thread(() -> {
+            while (true) {
+                int o = account.balance;
+                int n = o - 5;
+                if (U.compareAndSwapInt(account, BALANCE, o , n)) {
+                    break;
+                }
+            }
+        }, "t2").start();
+    }
+
+    public static void main(String[] args) {
+        Account account = new Account();
+        sync(account);
+    }
+
+}
+```
+
+
+
 ## 4、Java中的原子操作
 
 原子操作指的是在一步之内就完成而且不能被中断，原子操作在多线程环境中是线程安全的，无需考虑同步的问题。
