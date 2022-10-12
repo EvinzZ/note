@@ -23,7 +23,7 @@ static class Segment<K, V> extends ReentrantLock implements Serializable {
 
 #### 1.1.1、结构
 
-由多个Segment组合而成，Segment本身就相当于一个HashMap对象。同HashMap一样，Segment包含一个HashEntry数组，数组中的每一个HashEntry即是一个键值对，也是一个链表的头节点。
+由多个Segment组合 而成，Segment本身就相当于一个HashMap对象。同HashMap一样，Segment包含一个HashEntry数组，数组中的每一个HashEntry即是一个键值对，也是一个链表的头节点。
 
 单个`Segment`结构图：
 
