@@ -17,7 +17,7 @@ where 筛选条件          4
 group by 分组字段       5
 having 分组后的筛选      6
 order by 排序后的字段    8
-limit [offset,] size   9
+limit [offset,] size   9	
 
 offset:要显示条目的起始索引
 size  :要显示的条目个数
