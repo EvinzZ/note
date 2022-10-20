@@ -38,3 +38,9 @@ protected <T> T doGetBean(String name, @Nullable Class<T> requiredType, @Nullabl
 
 dependsOn用在非显式依赖的bean的创建顺序控制
 
+### 1.4.按Scope创建bean
+
+- scope理解为从xxx范围内找这个bean更加贴切
+- singleton scope表示从单例池范围内获取bean，如果没有，则创建并放入单例池
+- prototype scope，它从不缓存bean，每次都创建新的
+- request scope表示从request对象范围内获取bean，如果没有，则创建并放入request
