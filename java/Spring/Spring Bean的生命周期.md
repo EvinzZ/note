@@ -135,3 +135,17 @@ dependsOn用在非显式依赖的bean的创建顺序控制
 - 自定义scope bean的销毁在作用域对象生命周期结束时
 - prototype bean的销毁可以通过自动手动调用AutowireCapableBeanFactory.destrotBean方法执行销毁
 
+  
+
+## 2.总结
+
+1. 解析xml配置或注解配置的类，得到BeanDefinition
+2. 通过BeanDefinition反射创建Bean对象
+3. 对Bean对象进行属性填充
+4. 回调实现了Aware接口的方法，如BeanNameAware
+5. 调用BeanPostProcessor的初始化前方法
+6. 调用init初始化方法
+7. 调用BeanPostProcessor的初始化后方法，此处会进行AOP
+8. 将创建的Bean对象放入一个Map中
+9. 业务使用Bean对象
+10. Spring容器关闭时调用DisposableBean的destroy()方法
