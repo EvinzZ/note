@@ -146,6 +146,6 @@ dependsOn用在非显式依赖的bean的创建顺序控制
 5. 调用BeanPostProcessor的初始化前方法
 6. 调用init初始化方法
 7. 调用BeanPostProcessor的初始化后方法，此处会进行AOP
-8. 将创建的Bean对象放入一个Map中
+8. 将创建的Bean对象放入一个Map中（放入单例池，一级缓存）
 9. 业务使用Bean对象
 10. Spring容器关闭时调用DisposableBean的destroy()方法
