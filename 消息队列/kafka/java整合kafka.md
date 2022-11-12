@@ -210,3 +210,109 @@ public class Order {
         props.put(ProducerConfig.LINGER_MS_CONFIG, 10);
 ```
 
+## 2.消费者
+
+```java
+package com.example.demokafka.kafkademo;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Properties;
+
+/**
+ * 消费者
+ */
+public class MyConsumer {
+    private final static String TOPIC_NAME = "my-replicated-topic";
+    private final static String CONSUMER_GROUP_NAME = "testGroup";
+    public static void main(String[] args) {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.200.10:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_NAME); // 消费组名
+//        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true"); // 是否自动提交offset，默认true
+//        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000"); // 自动提交offset的间隔时间
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        /**
+         * 当小费主题的是一个新的消费组，或者指定offset的消费方式，offset不存在。那么应该如何消费
+         * latest（默认）：只消费自己启动之后发送到主题的消息
+         * earliest：第一次从头开始消费，以后按照消息offset记录继续消费，这个需要区别于consumer.seekToBeginning(每次都从头开始消费)
+         */
+//        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 1000); // consumer给broker发送心跳的时间间隔
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 10 * 1000); // kafka如果超过10秒没有收到消费者的心跳，则会把消费者踢出消费组，进行rebalance，把分区分配给其他消费者
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500); // 一次poll最大拉取消息的条数，可以根据消费速度的快慢来设置
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 30 * 1000); // 如果两次poll的时间如果超出了30s的时间间隔，kafka会认为其消费能力过若，将其踢出消费组，将分区分配给其他消费者
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
+        consumer.subscribe(Arrays.asList(TOPIC_NAME));
+        while (true) {
+            /**
+             * poll() API 是拉取消息的长轮询
+             */
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("收到消息：partition = %d,offset = %d, key = %s, value = %s%n", record.partition(), record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+```
+
+### 2.1.自动提交offset
+
+设置自动提交参数 - 默认
+
+```java
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true"); // 是否自动提交offset，默认true
+        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000"); // 自动提交offset的间隔时间
+```
+
+消费者poll到消息后默认情况下，会自动向broker的_consumer_offsets主题提交当前主题-分区消费的偏移量。
+
+**自动提交会丢消息**：因为如果消费者还没消费完poll下来的消息就自动提交了偏移量，那么此时消费者挂了，于是下一个消费者会从已提交的offset的下一个位置开始消费。之前未被消费的消息就丢失了。
+
+### 2.2.手动提交offset
+
+- 设置手动提交参数
+
+```java
+props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+```
+
+- 在消费完消息后进行手动提交
+
+1. 手动同步提交
+
+```java
+if (records.count() > 0) {
+    // 手动同步提交offset，当前线程会阻塞直到offset提交成功
+    // 一般使用同步提交，因为提交之后一般也没有什么逻辑代码了
+    consumer.commitSync();
+}
+```
+
+2. 手动异步提交
+
+```java
+if (records.count() > 0) {
+    // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
+    consumer.commitAsync(new OffsetCommitCallback()) {
+        @Override
+        public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
+            if (exception != null) {
+                System.err.println("Commit failed for " + offsets);
+                System.err.println("Commit failed exception： " + exception.getStackTrace());
+            }
+        }
+    }
+}
+```
+
