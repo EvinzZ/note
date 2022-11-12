@@ -15,3 +15,4 @@
 - 如果使用自动注入并使用BeanFactory，则需要使用API注册AutoWiredBeanPostProcessor，如果使用ApplicationContext，则可以使用XML进行配置。
 - 如果使用自动注入并使用BeanFactory，则需要使用APi注册AutoWiredBeanPostProcessor，如果使用ApplicationContext，则可以使用XML进行配置。
 - BeanFactory提供基本的IOC和DI功能，而ApplicationContext提供高级功能，BeanFactory可用于测试和非生产使用，但ApplicationContext是功能更丰富的容器实现，应该优于BeanFactory
+

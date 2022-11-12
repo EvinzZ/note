@@ -12,7 +12,7 @@
 8.  `initApplicationEventMulticaster`：为ApplicationContext提供事件发布器
 9.  `onRefresh`：留给子类扩展
 10. `registerListeners`：为ApplicationContext准备监听器
-11. `finishBeanFactoryInitialization：初始化单例Bean，执行Bean后处理器扩展
+11. `finishBeanFactoryInitialization`：初始化单例Bean，执行Bean后处理器扩展
 12. `finishRefresh`：准备生命周期管理器，发布ContextRefreshed
 
 `1`是准备工作

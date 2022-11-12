@@ -184,3 +184,29 @@ public class Order {
 - `ack = 1`（默认）：多副本之间的leader已经收到消息，并把消息写入到本地的log中，才会返回ack给生产者。（性能和安全性最均衡）
 - `ack = -1/all`：里面有默认的配置`min.insync.replicas=2`（默认为1，推荐配置大于等于2），此时就需要leader和一个follower同步完后，才会返回ack给生产者（此时集群中有2个已完成数据的接收）。（这种方式最安全，但性能最差）
 
+```java
+        props.put(ProducerConfig.ACKS_CONFIG, "1"); // ack配置
+        props.put(ProducerConfig.RETRIES_CONFIG, 3); // 重试配置
+        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 300); // 重试间隔设置
+```
+
+### 1.4.消息发送的缓冲区
+
+- kafka默认会创建一个消息缓冲区，用来存放要发送的信息，缓冲区是32M
+
+```java
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+```
+
+- kafka本地线程会去缓冲区中一次拉16k的数据，发送到broker
+
+```java
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+```
+
+- 如果线程拉不到16k的数据，间隔10ms也会将已拉到的数据发到broker
+
+```java
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 10);
+```
+
