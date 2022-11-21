@@ -397,3 +397,98 @@ for (Map.Entry<TopicPartition, OffsetAndTimeStamp> entry : parMap.entrySet()) {
 }
 ```
 
+### 2.9.新消费组的消费offset规则
+
+新消费组中的消费者，默认会从当前分区的最后一条消息的offet+1开始消费（消费新消息），可以通过以下的设置，让新的消费者第一次从头开始消费。之后开始消费新消息（最后消费的位置的偏移量+1）
+
+- latest：默认的，消费新消息
+- earliest：第一次从头开始消费，之后开始消费新消息（最后消费的位置的偏移量+1）
+
+```java
+props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+```
+
+## 3.springboot整合kafka
+
+- pom
+
+```xml
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+```
+
+- 生产者
+
+```java
+package com.example.demokakfkboot.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("msg")
+public class KafkaController {
+    private final static String TOPIC_NAME = "my-replicated-topic";
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @RequestMapping("/send")
+    public String send() {
+        kafkaTemplate.send(TOPIC_NAME, 0, "key", "this is a msg");
+        return "send ok";
+    }
+}
+
+```
+
+- 消费者
+
+```java
+package com.example.demokakfkboot.consumer;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyConsumer {
+
+//    @Autowired
+//    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @KafkaListener(topics = "my-replicated-topic", groupId = "MyGroup1")
+    public void listenGroup(ConsumerRecord<String, String> record, Acknowledgment ack) {
+        String value = record.value();
+        System.out.println(value);
+        System.out.println(record);
+        ack.acknowledge(); // 手动提交offset
+    }
+}
+
+```
+
+### 5.1.消费者中配置消费主题、分区和偏移量
+
+```java
+    @KafkaListener(groupId = "testGroup", topicPartitions = {
+            @TopicPartition(topic = "topic1", partitions = {"0","1"}),
+            @TopicPartition(topic = "topic2", partitions = "0",
+            partitionOffsets = @PartitionOffset(partition = "1", initialOffset = "100")
+            )
+    }, concurrency = "3") // concurrency就是同组下的消费者个数，就是并发消费数，建议小于等于分区数
+    public void listenGroupPro(ConsumerRecord<String, String> record, Acknowledgment ack) {
+        String value = record.value();
+        System.out.println(value);
+        System.out.println(record);
+        ack.acknowledge(); // 手动提交offset
+    }
+```
+
