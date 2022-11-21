@@ -261,6 +261,11 @@ public class MyConsumer {
                 System.out.printf("收到消息：partition = %d,offset = %d, key = %s, value = %s%n", record.partition(), record.offset(), record.key(), record.value());
             }
         }
+        if (records.count() > 0) {
+		    // 手动同步提交offset，当前线程会阻塞直到offset提交成功
+		    // 一般使用同步提交，因为提交之后一般也没有什么逻辑代码了
+		    consumer.commitSync();
+		}	
     }
 }
 
@@ -312,6 +317,82 @@ if (records.count() > 0) {
                 System.err.println("Commit failed exception： " + exception.getStackTrace());
             }
         }
+    }
+}
+```
+
+### 2.3.长轮询poll消息
+
+- 默认情况下，消费者一次会poll500条消息
+
+```java
+props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500); // 一次poll最大拉取消息的条数，可以根据消费速度的快慢来设置
+```
+
+- 代码中设置了长轮序的时间是1000毫秒
+
+```java
+            /**
+             * poll() API 是拉取消息的长轮询
+             */
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("收到消息：partition = %d,offset = %d, key = %s, value = %s%n", record.partition(), record.offset(), record.key(), record.value());
+            }
+```
+
+意味着：
+
+- 如果一次poll到了500条，就直接执行for循环
+- 如果这一次没有poll到500条，且时间在1秒内，那么长轮询继续poll，要么到500条，要么到1s
+- 如果多次poll都没达到500条，且1秒时间到了，那么直接执行for循环
+
+如果两次poll的间隔超过30s，集群会认为该消费者的消费能力过弱，该消费者被踢出消费组，触发rebalance机制，rebalance机制会造成性能开销，可以通过设置这个参数，让一次poll的消息条数少一点。
+
+### 2.4.消费者的健康状态检查
+
+消费者每隔1s向kafka集群发送心跳，集群发现如果有超过10s没有续约的消费者，将被踢出消费组，触发该消费者的rebalance机制，将该分区交给消费组里的其他消费者进行消费。
+
+### 2.5.指定分区消费
+
+```java
+consumer.assign(Arrays.asList(new TopicPartition(TOPIC_NAME, 0)));
+```
+
+### 2.6.消息回溯消费
+
+```java
+consumer.assign(Arrays.asList(new TopicPartition(TOPIC_NAME, 0)));
+consumer.seekToBeginning(Arrays.asList(new TopicPartition(TOPIC_NAME, 0)));
+```
+
+### 2.7.指定offset消费
+
+```java
+.consumer.assign(Arrays.asList(new TopicPartition(TOPIC_NAME, 0)));
+consumer.seek(new TopicPartition(TOPIC_NAME, 0), 10);
+```
+
+### 2.8.从指定时间点开始消费
+
+```java
+List<PartitionInfo> topicPartitions = consumer.partitionsFor(TOPIC_NAME);
+// 从1小时前开始消费
+long fetchDataTime = new Date().getTime() - 1000 * 60 * 60;
+Map<TopicPartition, Long> map = new HashMap();
+for (PartitionInfo par : topicPartitions) {
+    map.put(new TopicPartition(TOPIC_NAME, par.partition()), getchDataTime);
+}
+Map<TopicPartition, OffsetAndTimestamp> parMap = consumer.offsetsForTimes(map);
+for (Map.Entry<TopicPartition, OffsetAndTimeStamp> entry : parMap.entrySet()) {
+    TopicPartition key = entry.getValue();
+    if (key == null || value == null) continue;
+    Long offset = value.offset();
+    System.out.println("partition-" + key.partition() + "|offset-" + offset);
+    // 根据消费里的timestamp确定offset
+    if (value != null) {
+        consumer.assign(Arrays.asList(key));
+        consumer,seek(key, offset);
     }
 }
 ```
